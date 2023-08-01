@@ -1,54 +1,241 @@
-# C++ objects and libs
-*.slo
-*.lo
-*.o
-*.a
-*.la
-*.lai
-*.so
-*.so.*
-*.dll
-*.dylib
+#create the Easy Editor photo editor here!
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QFileDialog, QApplication, QWidget, QPushButton, QLabel, QVBoxLayout,QHBoxLayout,QTextEdit,QListWidget
+import os
+from PIL import Image,ImageFilter,ImageEnhance
 
-# Qt-es
-object_script.*.Release
-object_script.*.Debug
-*_plugin_import.cpp
-/.qmake.cache
-/.qmake.stash
-*.pro.user
-*.pro.user.*
-*.qbs.user
-*.qbs.user.*
-*.moc
-moc_*.cpp
-moc_*.h
-qrc_*.cpp
-ui_*.h
-*.qmlc
-*.jsc
-Makefile*
-*build-*
-*.qm
-*.prl
 
-# Qt unit tests
-target_wrapper.*
 
-# QtCreator
-*.autosave
 
-# QtCreator Qml
-*.qmlproject.user
-*.qmlproject.user.*
 
-# QtCreator CMake
-CMakeLists.txt.user*
 
-# QtCreator 4.8< compilation database
-compile_commands.json
+app = QApplication([])
+my_window = QWidget()
+my_window.setWindowTitle("photo editing app")
+my_window.resize(900,700)
 
-# QtCreator local machine specific files for imported projects
-*creator.user*
 
-*_qmlcache.qrc
+label = QLabel("Image Here:")
+
+
+button = QPushButton("Reset")
+button1 = QPushButton("Folder")
+
+button2 = QPushButton("Left")
+button3 = QPushButton("Right")
+button4 = QPushButton("Mirror")
+button5 = QPushButton("Sharpness")
+button6 = QPushButton("Black & White")
+button7 = QPushButton("Color")
+button8 = QPushButton("Contrast")
+button9 = QPushButton("Blury")
+
+
+lis_t = QListWidget()
+
+
+
+
+
+master_row = QHBoxLayout()
+
+col1 = QVBoxLayout()
+col2 = QVBoxLayout()
+row1 = QHBoxLayout()
+row2 = QHBoxLayout()
+
+
+row1.addWidget(button2)
+row1.addWidget(button3)
+row1.addWidget(button4)
+row1.addWidget(button5)
+row2.addWidget(button6)
+row2.addWidget(button7)
+row2.addWidget(button8)
+row2.addWidget(button9)
+
+col1.addWidget(button)
+col1.addWidget(button1)
+col1.addWidget(lis_t)
+col2.addWidget(label)
+col2.addLayout(row1)
+col2.addLayout(row2)
+
+
+master_row.addLayout(col1, 20)
+master_row.addLayout(col2, 80)
+my_window.setLayout(master_row)
+
+#ahhhh! funtion i love it! 
+workdir = ""
+def choose_workdir():
+    global workdir
+    workdir = QFileDialog.getExistingDirectory()
+
+def filter(filenames,extensions):
+    res = []
+    for file in filenames:
+        for extension in extensions:
+            if file.endswith(extension):
+                res.append(file)
+    return res
+
+def show_file():
+    extensions = [".png",".jpg",".jpeg",".bmp",".svg"]
+    choose_workdir()
+    try:
+        filenames = filter(os.listdir(workdir),extensions)
+        lis_t.clear()
+        for filename in filenames:
+            lis_t.addItem(filename)
+    except FileNotFoundError:
+        print("Can't find")
+
+
+
+class ABC():
+    def __init__(self):
+        self.filename = None
+        self.image = None
+        self.dir = None
+        self.edit = "edit/"
+
+    def loadImage(self, x, filename):
+        self.filename = filename
+        self.dir = x
+        image_path = os.path.join(self.dir ,self.filename)
+        self.image = Image.open(image_path)
+
+    def saveImage(self):
+        path = os.path.join(workdir, self.edit)
+        if not (os.path.exists(path) or os.path.isdir(path)):
+            os.mkdir(path)
+        image_path = os.path.join(path,self.filename)
+        self.image.save(image_path)
+
+    def showImage(self,path):
+        label.hide()
+        image = QPixmap(path)
+        w,h = label.width(), label.height()
+        image = image.scaled(w,h,Qt.KeepAspectRatio)
+        label.setPixmap(image)
+        label.show()
+
+    def reset_image(self):
+        label.setText("Image here:")
+        lis_t.clear()
+
+
+
+
+    
+    def blackWhite(self):
+        try:
+            self.image = self.image.convert("L")
+            self.saveImage()
+            image_path = os.path.join(workdir,self.edit, self.filename)
+            self.showImage(image_path)
+        except AttributeError:
+            print("Picture hasn't been select")
+
+    def mirror(self):
+        try:
+            self.image = self.image.transpose(Image.FLIP_LEFT_RIGHT)
+            self.saveImage()
+            image_path = os.path.join(workdir,self.edit, self.filename)
+            self.showImage(image_path)
+        except AttributeError:
+            print("Picture hasn't been select")
+
+    def blur(self):
+        try:
+            self.image = self.image.filter(ImageFilter.BLUR)
+            self.saveImage()
+            image_path = os.path.join(workdir,self.edit, self.filename)
+            self.showImage(image_path)
+        except AttributeError:
+            print("Picture hasn't been select")
+
+    def color(self):
+        try:
+            self.image = ImageEnhance.Color(self.image).enhance(2)
+            self.saveImage()
+            image_path = os.path.join(workdir,self.edit, self.filename)
+            self.showImage(image_path)
+        except AttributeError:
+            print("Picture hasn't been select")
+
+    def contrast(self):
+        try:
+            self.image = ImageEnhance.Contrast(self.image).enhance(2)
+            self.saveImage()
+            image_path = os.path.join(workdir,self.edit, self.filename)
+            self.showImage(image_path)
+        except AttributeError:
+            print("Picture hasn't been select")
+    def flip_right(self):
+        try:
+            self.image = self.image.transpose(Image.ROTATE_270)
+            self.saveImage()
+            image_path = os.path.join(workdir,self.edit, self.filename)
+            self.showImage(image_path)
+        except AttributeError:
+            print("Picture hasn't been select")
+
+    def flip_left(self):
+        try:
+            self.image = self.image.transpose(Image.ROTATE_90)
+            self.saveImage()
+            image_path = os.path.join(workdir,self.edit, self.filename)
+            self.showImage(image_path)
+        except AttributeError:
+            print("Picture hasn't been select")
+    def sharpness(self):
+        try:
+            self.image = self.image.filter(ImageFilter.SHARPEN)
+            self.saveImage()
+            image_path = os.path.join(workdir,self.edit, self.filename)
+            self.showImage(image_path)
+        except AttributeError:
+            print("Picture hasn't been select")
+
+
+
+
+#more funtion...
+def showChosenImage():
+    if lis_t.currentRow()>=0:
+        filename = lis_t.currentItem().text()
+        workimage.loadImage(workdir, filename)
+        image_path = os.path.join(workimage.dir,workimage.filename)
+        workimage.showImage(image_path)
+
+
+
+
+workimage= ABC()
+
+lis_t.currentRowChanged.connect(showChosenImage)
+
+button.clicked.connect(workimage.reset_image)
+button1.clicked.connect(show_file)
+button2.clicked.connect(workimage.flip_left)
+button3.clicked.connect(workimage.flip_right)
+button4.clicked.connect(workimage.mirror)
+button5.clicked.connect(workimage.sharpness)
+button6.clicked.connect(workimage.blackWhite)
+button7.clicked.connect(workimage.color)
+button8.clicked.connect(workimage.contrast)
+button9.clicked.connect(workimage.blur)
+
+
+my_window.show()
+app.exec_()
+
+
+
+
+
+
+
